@@ -6,7 +6,9 @@ import base from "../config/api";
 import { FaCalendarAlt } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import { useRef } from "react";
+import { FaAngleDown } from "react-icons/fa6";
 import "react-datepicker/dist/react-datepicker.css";
+// import { set } from "react-datepicker/dist/date_utils";
 
 const EmployeeCreation = () => {
   const {
@@ -15,11 +17,13 @@ const EmployeeCreation = () => {
     selectedOrg: initialSelectedOrg,
   } = useSelector((state) => state.user); // Fetch role and organizations from Redux
   const [selectedOrg, setSelectedOrg] = useState(""); // Selected organization for Super Admin
+  const [empType , setEmpType] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
     doj: null, // Use Date object for integration with react-datepicker
     dol: null,
+    empCodes:"",
     empType: "Staff", // Default to "Staff"
     salaryType: "Monthly", // Default to "Fixed"
     salary: "",
@@ -27,6 +31,17 @@ const EmployeeCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const datePickerRefDoj = useRef(null);
   const datePickerRefDol = useRef(null);
+  const [empCodes, setEmpCodes] = useState([
+    300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314,
+    315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329,
+    330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344,
+    345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359,
+    360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374,
+    375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389,
+    390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400,
+  ]);
+  const [isOpened , setOpened] = useState(false) // Select tag for Empcode
+  const [EC , setEC] = useState('') // Set Employee code in input 
 
   // Set default organization based on role
   useEffect(() => {
@@ -37,6 +52,29 @@ const EmployeeCreation = () => {
       setSelectedOrg(""); // Allow Super Admin to choose the organization
     }
   }, [role, initialSelectedOrg]);
+
+  useEffect(() => {
+    console.log(selectedOrg);
+    console.log(empCodes);
+    const fetchEmpCode = async () => {
+      try {
+        const response = await fetch(`${base.baseUrl}/api/${selectedOrg}/${formData.empType}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const empCodes = await response.json();
+        setEmpCodes(empCodes);
+        if (!response.ok) {
+          console.log(response.status);
+        }
+      } catch (error) {
+        console.log("Error");
+      }
+    };
+
+    selectedOrg ? fetchEmpCode() : "";
+    formData.empType ? fetchEmpCode() : "";
+  }, [selectedOrg, formData.empType]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +94,7 @@ const EmployeeCreation = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData)
+    console.log(formData);
     // Helper function for formatting dates
     const formattedDate = (date) =>
       date
@@ -88,7 +126,7 @@ const EmployeeCreation = () => {
         { withCredentials: true }
       );
 
-      console.log(response.data)
+      console.log(response.data);
 
       Swal.fire({
         icon: "success",
@@ -155,8 +193,6 @@ const EmployeeCreation = () => {
             </div>
           )}
 
-          
-
           {/* Employee Type */}
           <div className="relative pt-2">
             <label
@@ -179,24 +215,37 @@ const EmployeeCreation = () => {
           </div>
 
           {/* Creating Employee code  */}
+
           <div className="relative pt-2">
-              <label
-                htmlFor="name"
-                className="absolute text-sm md:text-base font-semibold top-1 left-3 bg-white px-1 -mt-2 text-gray-600"
-              >
-                Employee ID <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="empId"
-                placeholder="Employee Id"
-                value={formData.empId}
-                onChange={handleInputChange}
-                className="border border-blue-400 rounded-lg outline-none p-3 w-full"
-                required
-                autoComplete="off"
-              />
+            <label
+              htmlFor="empCode"
+              className="absolute text-sm md:text-base font-semibold top-1 left-3 bg-white px-1 -mt-2 text-gray-600"
+            >
+              Employee Code <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="empCode"
+              value={formData.empCodes||""}
+              // value={formData.empCode}
+              onChange={handleInputChange}
+              className={`border border-blue-400 rounded-lg outline-none p-3 w-full`}
+              required
+              autoComplete="off"
+              onFocus={()=>setOpened(true)}
+              onBlur={()=>setOpened(false)}
+            />
+            <p className="absolute top-[22px] right-1 text-sm"><FaAngleDown /> </p>
+            {isOpened ? 
+            <div className={`absolute h-[200px] z-50 bg-white w-full overflow-y-scroll overflow-x-hidden rounded-lg border border-t-transparent border-blue-400 ${formData.empCodes ? 'hidden' : ''}`}>
+              {empCodes.map((x) => {
+                return <option className="hover:bg-blue-600 p-1" onClick={()=>setFormData((prev)=>({
+                  ...prev,
+                  empCodes:x
+                }))} value={x}>{x}</option>;
+              })}
             </div>
+              : ''}
+          </div>
 
           {/* Name and Mobile */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
