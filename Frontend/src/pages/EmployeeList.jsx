@@ -43,29 +43,55 @@ const EmployeeList = () => {
   }, [selectedOrgin]);
 
   // Sorting logic
+
+  // const handleSort = (field) => {
+  //   const order = sortField === field && sortOrder === "asc" ? "desc" : "asc"; // Toggle sort order
+  //   // console.log(order)
+  //   setSortField(field);
+  //   setSortOrder(order);
+
+  //   const sortedEmployees = [...employees].sort((a, b) => {
+  //     let valueA = a[field];
+  //     let valueB = b[field];
+
+  //     if (field === "empCode") {
+  //       valueA = isNaN(valueA) ? 0 : parseInt(valueA); // Handle non-numeric empCodes
+  //       valueB = isNaN(valueB) ? 0 : parseInt(valueB);
+  //     }
+
+  //     if (typeof valueA === "string" && typeof valueB === "string") {
+  //       return order === "asc"
+  //         ? valueA.localeCompare(valueB)
+  //         : valueB.localeCompare(valueA);
+  //     } else {
+  //       return order === "asc" ? valueA - valueB : valueB - valueA;
+  //     }
+  //   });
+
+  //   setEmployees(sortedEmployees);
+  // };
+
+
   const handleSort = (field) => {
     const order = sortField === field && sortOrder === "asc" ? "desc" : "asc"; // Toggle sort order
     setSortField(field);
     setSortOrder(order);
-
+  
     const sortedEmployees = [...employees].sort((a, b) => {
-      let valueA = a[field];
-      let valueB = b[field];
+      let valueA = String(a[field] || "");
+      let valueB = String(b[field] || "");
+      
 
       if (field === "empCode") {
-        valueA = isNaN(valueA) ? 0 : parseInt(valueA); // Handle non-numeric empCodes
-        valueB = isNaN(valueB) ? 0 : parseInt(valueB);
+        valueA = valueA.padStart(10, "0");
+        valueB = valueB.padStart(10, "0");
       }
 
-      if (typeof valueA === "string" && typeof valueB === "string") {
-        return order === "asc"
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
-      } else {
-        return order === "asc" ? valueA - valueB : valueB - valueA;
-      }
+      return order === "asc"
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
     });
-
+  
     setEmployees(sortedEmployees);
   };
 
