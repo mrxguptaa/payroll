@@ -6,8 +6,9 @@ import {
   deleteEmployee,
   getEmployeeChart,
   getSerializedEmployees,
-  getEmpToAdvanceMark
+  getEmpToAdvanceMark,
   // getAttendanceEmp
+  getAvailableEmpID
 } from "../controllers/employeeCon.js";
 
 const router = express.Router();
@@ -27,5 +28,8 @@ router.get("/chart", getEmployeeChart);
 router.get("/serialized", getSerializedEmployees);
 
 router.get("/getEmpToAdvanceMark",getEmpToAdvanceMark)
+
+router.get("/getAvailableEmployeeId/", getAvailableEmpID)
+
 
 export default router;

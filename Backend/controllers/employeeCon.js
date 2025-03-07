@@ -1,6 +1,7 @@
+
 import Employee from "../models/Employee.js";
 
-import Attendance from "../models/AttendanceSchema.js"
+import Attendance from "../models/AttendanceSchema.js";
 
 const generateEmpCode = async (org, empType, doj) => {
   let prefix = "";
@@ -29,7 +30,9 @@ const generateEmpCode = async (org, empType, doj) => {
   }
 
   // Fetch all employees for the given organization and type
-  const employees = await Employee.find({ org, empType }).select("empCode doj dol");
+  const employees = await Employee.find({ org, empType }).select(
+    "empCode doj dol"
+  );
 
   // Find reusable codes where the `dol` is before the new employee's `doj`
   const reusableCodes = employees
@@ -57,7 +60,9 @@ const generateEmpCode = async (org, empType, doj) => {
     });
 
   // Find codes that are reusable and not overlapping
-  const availableCodes = reusableCodes.filter((code) => !overlappingCodes.includes(code));
+  const availableCodes = reusableCodes.filter(
+    (code) => !overlappingCodes.includes(code)
+  );
 
   if (availableCodes.length > 0) {
     return `${prefix}${Math.min(...availableCodes)}`; // Reuse the smallest available code
@@ -82,21 +87,22 @@ const generateEmpCode = async (org, empType, doj) => {
   throw new Error("No available codes in the range");
 };
 
-
-
 export const createEmployee = async (req, res) => {
   try {
-    const { name, mobile, doj, dol, empType, org, salaryType } = req.body;
+    const { name, mobile, doj, dol, empType, org, salaryType, empCode } =
+      req.body;
     let { salary } = req.body;
     salary = salary != null ? salary : 0;
 
     if (dol && new Date(dol) <= new Date(doj)) {
-      return res.status(400).json({ message: "Date of Leaving must be after Date of Joining." });
+      return res
+        .status(400)
+        .json({ message: "Date of Leaving must be after Date of Joining." });
     }
 
     // Generate an appropriate empCode with respect to the joining date
-    const empCode = await generateEmpCode(org, empType, doj);
-    
+    // const empCode = await generateEmpCode(org, empType, doj);
+
     // Create a new employee
     const newEmployee = new Employee({
       name,
@@ -111,13 +117,15 @@ export const createEmployee = async (req, res) => {
     });
 
     await newEmployee.save();
-    res.status(201).json({ message: "Employee created successfully.", empCode });
+    res
+      .status(201)
+      .json({ message: "Employee created successfully.", empCode });
   } catch (error) {
-    
-    res.status(500).json({ message: "Failed to create employee.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to create employee.", error: error.message });
   }
 };
-
 
 export const getEmployees = async (req, res) => {
   try {
@@ -137,15 +145,17 @@ export const getEmployees = async (req, res) => {
     // Return response
     res.status(200).json(employees);
   } catch (error) {
-    
-    res.status(500).json({ message: "Failed to fetch employees", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch employees", error: error.message });
   }
 };
 
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, mobile, doj, dol, empType, org, salaryType, salary } = req.body;
+    const { name, mobile, doj, dol, empType, org, salaryType, salary } =
+      req.body;
 
     // Find the employee by ID
     const employee = await Employee.findById(id);
@@ -154,7 +164,10 @@ export const updateEmployee = async (req, res) => {
     }
 
     // If organization or employee type is changing, delete the old employee and create a new one
-    if ((org && org !== employee.org) || (empType && empType !== employee.empType)) {
+    if (
+      (org && org !== employee.org) ||
+      (empType && empType !== employee.empType)
+    ) {
       // Remove associated attendance records
       await Attendance.deleteMany({ employeeId: employee._id });
 
@@ -162,7 +175,11 @@ export const updateEmployee = async (req, res) => {
       await Employee.findByIdAndDelete(employee._id); // Use findByIdAndDelete instead of remove
 
       // Generate a new empCode for the new organization and type
-      const newEmpCode = await generateEmpCode(org || employee.org, empType || employee.empType, doj || employee.doj);
+      const newEmpCode = await generateEmpCode(
+        org || employee.org,
+        empType || employee.empType,
+        doj || employee.doj
+      );
 
       // Create a new employee record
       const newEmployee = new Employee({
@@ -187,7 +204,9 @@ export const updateEmployee = async (req, res) => {
 
     // If no organization or employee type change, just update the existing employee
     if (dol && new Date(dol) <= new Date(doj || employee.doj)) {
-      return res.status(400).json({ message: "Date of Leaving must be after Date of Joining." });
+      return res
+        .status(400)
+        .json({ message: "Date of Leaving must be after Date of Joining." });
     }
 
     employee.name = name || employee.name;
@@ -201,18 +220,14 @@ export const updateEmployee = async (req, res) => {
 
     return res.status(200).json({ message: "Employee updated successfully." });
   } catch (error) {
-    
-    return res.status(500).json({ message: "Failed to update employee.", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to update employee.", error: error.message });
   }
 };
 
-
-
-
 export const deleteEmployee = async (req, res) => {
-
   const { id } = req.params;
-  
 
   try {
     const employee = await Employee.findById(id);
@@ -232,11 +247,11 @@ export const deleteEmployee = async (req, res) => {
     res.status(200).json({ message: "Employee deleted successfully." });
   } catch (error) {
     console.error("Error deleting employee:", error);
-    res.status(500).json({ message: "Failed to delete employee.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to delete employee.", error: error.message });
   }
 };
-
-
 
 export const getEmployeeChart = async (req, res) => {
   try {
@@ -248,14 +263,18 @@ export const getEmployeeChart = async (req, res) => {
 
     const employees = await Employee.find({
       org,
-      $or: [{ dol: null }, { dol: { $gte: new Date() } }], 
+      $or: [{ dol: null }, { dol: { $gte: new Date() } }],
     }).sort({ empCode: 1 });
 
     const chart = [];
     const ranges = {
       "Mittal Spinners": { staff: [1, 100], labor: [101, 300] },
       "HRM Spinners": { staff: [301, 400], labor: [401, 600] },
-      "Jai Durga Cottex": { staff: [1, 100], labor: [101, 200], prefix: "JDC-" },
+      "Jai Durga Cottex": {
+        staff: [1, 100],
+        labor: [101, 200],
+        prefix: "JDC-",
+      },
     };
 
     const range = ranges[org] || {};
@@ -279,7 +298,7 @@ export const getEmployeeChart = async (req, res) => {
       }
     });
 
-    console.log("chart",chart)
+    console.log("chart", chart);
 
     // Return the generated chart
     res.status(200).json(chart);
@@ -288,8 +307,6 @@ export const getEmployeeChart = async (req, res) => {
     res.status(500).json({ message: "Failed to generate chart.", error });
   }
 };
-
-
 
 // Controller to get employees with serialized data
 export const getSerializedEmployees = async (req, res) => {
@@ -304,9 +321,7 @@ export const getSerializedEmployees = async (req, res) => {
     // Add organization filter if provided
     if (org) query.org = org;
 
-    const employees = await Employee.find(query).sort({salary:1});
-
-    
+    const employees = await Employee.find(query).sort({ salary: 1 });
 
     res.status(200).json(employees);
   } catch (error) {
@@ -332,7 +347,6 @@ export const getSerializedEmployees = async (req, res) => {
 
 //     const filemployees = await Employee.find(query)
 
-
 //     res.status(200).json({
 //       filemployees,
 //     });
@@ -342,8 +356,98 @@ export const getSerializedEmployees = async (req, res) => {
 //   }
 // };
 
+//By Shivam
+//Get Available Employee Id
+
+export const getAvailableEmpID = async (req, res) => {
+  const ranges = {
+    "Mittal Spinners": { Staff: [1, 100], Labor: [101, 300] },
+    "HRM Spinners": { Staff: [301, 400], Labor: [401, 600] },
+    "Jai Durga Cottex": { Staff: [1, 100], Labor: [101, 200], prefix: "JDC-" },
+  };
+
+  const orgname = req.query.org;
+  const empType = req.query.emptype;
+  // console.log("Org name and emp type = ", orgname, empType);
+
+  try {
+    const employees = await Employee.find({ org: orgname, empType }).select(
+      "name empCode empType"
+    );
+
+    // console.log("Employees", employees, "Emp length :", employees.length);
+
+    // employees.map((val)=>{
+    //   val.empCode.slice(4)
+    // })
+
+    // console.log(employees)
+
+    //Available Employee Codes Array
+    let arr = [];
+
+    //Used Employee Codes Array
+    
+    
+    if (orgname == "HRM Spinners" || orgname == "Mittal Spinners") {
+      // console.log("HRM OR MITTALS");
+      // .filter((code) => !isNaN(code));
+      const empCodes = employees.map((emp) => Number(emp.empCode));
+      
+      console.log("Existing Employee Codes:", empCodes);
+
+      for (
+        let i = ranges[orgname][empType][0];
+        i <= ranges[orgname][empType][1];
+        i++
+      ) {
+        if (empCodes.includes(i)) continue;
+        arr.push(`${i}`);
+      }
+
+      // console.log("array is ", arr);
+
+      res.status(200).json({
+        message: "Data Fetched",
+        arr,
+      });
+    } else if (orgname === "Jai Durga Cottex") {
+      // console.log("JDC Employees ", employees)
+
+      // console.log("emp codes", empCodes);
+      const empCodes = employees.map((emp) => emp.empCode);
+
+      for (
+        let i = ranges[orgname][empType][0];
+        i <= ranges[orgname][empType][1];
+        i++
+      ) {
+        let test = `JDC-${i}`;
+        if (empCodes.includes(test)) continue;
+        else{arr.push(test)};
+      }
+       console.log(arr)
+
+      // console.log("array is ", arr);
+
+      res.status(200).json({
+        message: "Data fetched",
+        arr,
+      });
+    } else {
+      res.status(404).json({
+        message: "Incorrect Org Name",
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: "not found",
+      error: error,
+    });
+  }
+};
+
 export const getEmpToAdvanceMark = async (req, res) => {
-  
   try {
     const { org, month, year } = req.query;
 
@@ -381,7 +485,6 @@ export const getEmpToAdvanceMark = async (req, res) => {
 
     res.status(200).json(currentMonthAdvances);
   } catch (error) {
-    
     res.status(500).json({ message: "Failed to fetch employees." });
   }
 };

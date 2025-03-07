@@ -23,7 +23,7 @@ const EmployeeCreation = () => {
     mobile: "",
     doj: null, // Use Date object for integration with react-datepicker
     dol: null,
-    empCodes:"",
+    empCode:"",
     empType: "Staff", // Default to "Staff"
     salaryType: "Monthly", // Default to "Fixed"
     salary: "",
@@ -31,17 +31,20 @@ const EmployeeCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const datePickerRefDoj = useRef(null);
   const datePickerRefDol = useRef(null);
-  const [empCodes, setEmpCodes] = useState([
-    300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314,
-    315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329,
-    330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344,
-    345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359,
-    360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374,
-    375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389,
-    390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400,
-  ]);
+  const [empCodes, setEmpCodes] = useState([]);
   const [isOpened , setOpened] = useState(false) // Select tag for Empcode
   const [EC , setEC] = useState('') // Set Employee code in input 
+
+
+  const handleSelect = (x) => {
+    setEC(x); // Save selected option
+    console.log(x)
+    setFormData((prev) => ({
+      ...prev,
+      empCode: x,
+    }));
+    setOpened(false); 
+  };
 
   // Set default organization based on role
   useEffect(() => {
@@ -57,23 +60,24 @@ const EmployeeCreation = () => {
     console.log(selectedOrg);
     console.log(empCodes);
     const fetchEmpCode = async () => {
-      try {
-        const response = await fetch(`${base.baseUrl}/api/${selectedOrg}/${formData.empType}`, {
+       try {
+        const response = await fetch(`${base.baseUrl}/api/employees/getAvailableEmployeeId/?org=${selectedOrg}&emptype=${formData.empType}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
         const empCodes = await response.json();
-        setEmpCodes(empCodes);
+        setEmpCodes(empCodes.arr);
+        // console.log(empCodes.arr)
         if (!response.ok) {
           console.log(response.status);
         }
       } catch (error) {
         console.log("Error");
       }
-    };
+    }
 
-    selectedOrg ? fetchEmpCode() : "";
-    formData.empType ? fetchEmpCode() : "";
+    selectedOrg ? formData.empType ? fetchEmpCode() : "" : "";
+    
   }, [selectedOrg, formData.empType]);
 
   const handleInputChange = (e) => {
@@ -140,6 +144,7 @@ const EmployeeCreation = () => {
         doj: null,
         dol: null,
         empType: "Staff",
+        empCode: "",
         salaryType: "Monthly",
         salary: "",
       });
@@ -225,23 +230,20 @@ const EmployeeCreation = () => {
             </label>
             <input
               name="empCode"
-              value={formData.empCodes||""}
+              value={EC ? EC : ''}
               // value={formData.empCode}
               onChange={handleInputChange}
               className={`border border-blue-400 rounded-lg outline-none p-3 w-full`}
               required
               autoComplete="off"
-              onFocus={()=>setOpened(true)}
+              onClick={()=>{setOpened(true); console.log('Input Open clicked')}}
               onBlur={()=>setOpened(false)}
             />
             <p className="absolute top-[22px] right-1 text-sm"><FaAngleDown /> </p>
             {isOpened ? 
-            <div className={`absolute h-[200px] z-50 bg-white w-full overflow-y-scroll overflow-x-hidden rounded-lg border border-t-transparent border-blue-400 ${formData.empCodes ? 'hidden' : ''}`}>
-              {empCodes.map((x) => {
-                return <option className="hover:bg-blue-600 p-1" onClick={()=>setFormData((prev)=>({
-                  ...prev,
-                  empCodes:x
-                }))} value={x}>{x}</option>;
+            <div className={`absolute h-[200px] z-50 bg-white w-full overflow-y-scroll overflow-x-hidden rounded-lg border border-t-transparent border-blue-400 ${formData.empCode ? 'hidden' : ''}`}>
+              {empCodes.map((x , index) => {
+                return <div className="hover:bg-blue-600 p-1" onMouseDown={()=>handleSelect(x)} key={index} value={x}>{x}</div>;
               })}
             </div>
               : ''}
