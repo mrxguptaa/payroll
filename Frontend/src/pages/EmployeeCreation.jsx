@@ -236,12 +236,12 @@ const EmployeeCreation = () => {
               className={`border border-blue-400 rounded-lg outline-none p-3 w-full`}
               required
               autoComplete="off"
-              onClick={()=>{setOpened(true); console.log('Input Open clicked')}}
+              onClick={()=>{setOpened(true); console.log('Input Open clicked', isOpened)}}
               onBlur={()=>setOpened(false)}
             />
-            <p className="absolute top-[22px] right-1 text-sm"><FaAngleDown /> </p>
+            <p className="absolute top-[22px] right-1 text-sm" onClick={()=>setOpened(!isOpened)}><FaAngleDown /> </p>
             {isOpened ? 
-            <div className={`absolute h-[200px] z-50 bg-white w-full overflow-y-scroll overflow-x-hidden rounded-lg border border-t-transparent border-blue-400 ${formData.empCode ? 'hidden' : ''}`}>
+            <div className={`absolute h-[200px] z-50 bg-white w-full overflow-y-scroll overflow-x-hidden rounded-lg border border-t-transparent border-blue-400 ${formData.empCode ? '' : ''}`}>
               {empCodes.map((x , index) => {
                 return <div className="hover:bg-blue-600 p-1" onMouseDown={()=>handleSelect(x)} key={index} value={x}>{x}</div>;
               })}
