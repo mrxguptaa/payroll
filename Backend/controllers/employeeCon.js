@@ -1,4 +1,3 @@
-
 import Employee from "../models/Employee.js";
 
 import Attendance from "../models/AttendanceSchema.js";
@@ -368,55 +367,54 @@ export const getAvailableEmpID = async (req, res) => {
 
   const orgname = req.query.org;
   const empType = req.query.emptype;
-  // console.log("Org name and emp type = ", orgname, empType);
-
+  const date = new Date(Date.now());
   try {
-    const employees = await Employee.find({ org: orgname, empType }).select(
-      "name empCode empType"
-    );
+    const data = await Employee.find({
+      org: orgname,
+      empType,
 
-    // console.log("Employees", employees, "Emp length :", employees.length);
+    }).select("name empCode empType dol");
 
-    // employees.map((val)=>{
-    //   val.empCode.slice(4)
+    
+    // const empCodes = data.filter((val)=>{
+    //   return val.empCode
     // })
+    // return res.json(data)
 
-    // console.log(employees)
-
+    
+    // console.log("Employees ", employees)
     //Available Employee Codes Array
     let arr = [];
 
     //Used Employee Codes Array
-    
-    
-    if (orgname == "HRM Spinners" || orgname == "Mittal Spinners") {
-      // console.log("HRM OR MITTALS");
-      // .filter((code) => !isNaN(code));
-      const empCodes = employees.map((emp) => Number(emp.empCode));
-      
-      console.log("Existing Employee Codes:", empCodes);
+    const empCodes = data.map((emp) => {
+      if(emp.dol>=date){
+        return emp.empCode;
+      }else if(emp.dol == null){
+        return emp.empCode;
+      }else{
+      }
+    });
 
+    console.log(empCodes)
+
+    // console.log(empCodes)
+
+    if (orgname == "HRM Spinners" || orgname == "Mittal Spinners") {
       for (
         let i = ranges[orgname][empType][0];
         i <= ranges[orgname][empType][1];
         i++
       ) {
-        if (empCodes.includes(i)) continue;
+        if (empCodes.includes(`${i}`)) continue;
         arr.push(`${i}`);
       }
-
-      // console.log("array is ", arr);
 
       res.status(200).json({
         message: "Data Fetched",
         arr,
       });
     } else if (orgname === "Jai Durga Cottex") {
-      // console.log("JDC Employees ", employees)
-
-      // console.log("emp codes", empCodes);
-      const empCodes = employees.map((emp) => emp.empCode);
-
       for (
         let i = ranges[orgname][empType][0];
         i <= ranges[orgname][empType][1];
@@ -424,11 +422,8 @@ export const getAvailableEmpID = async (req, res) => {
       ) {
         let test = `JDC-${i}`;
         if (empCodes.includes(test)) continue;
-        else{arr.push(test)};
+        arr.push(test);
       }
-       console.log(arr)
-
-      // console.log("array is ", arr);
 
       res.status(200).json({
         message: "Data fetched",
